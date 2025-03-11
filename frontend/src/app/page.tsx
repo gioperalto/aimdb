@@ -12,30 +12,30 @@ const Home = () => {
   const navigate = useNavigate();
 
   const search = (e: { preventDefault: () => void; }) => {
-    // Mock data - replace with actual API response
-    const mockResults = [
-      { id: 1, title: "The Matrix", year: 1999, rating: 8.7 },
-      { id: 2, title: "Inception", year: 2010, rating: 8.8 },
-      { id: 3, title: "Interstellar", year: 2014, rating: 8.6 },
-      { id: 4, title: "The Dark Knight", year: 2008, rating: 9.0 },
-      { id: 5, title: "Pulp Fiction", year: 1994, rating: 8.9 },
-    ].filter(item => 
-      item.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    setIsSearching(true);
     
-    setSearchResults(mockResults);
+    // Simulate API call with timeout
+    setTimeout(() => {
+      // Mock data - replace with actual API response
+      const mockResults = [
+        { id: 1, title: "The Matrix", year: 1999, rating: 8.7 },
+        { id: 2, title: "Inception", year: 2010, rating: 8.8 },
+        { id: 3, title: "Interstellar", year: 2014, rating: 8.6 },
+        { id: 4, title: "The Dark Knight", year: 2008, rating: 9.0 },
+        { id: 5, title: "Pulp Fiction", year: 1994, rating: 8.9 },
+      ].filter(item => 
+        item.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      
+      setSearchResults(mockResults);
+      setIsSearching(false);
+    }, 500);
   };
 
   // Mock search function - would be replaced with actual API call
   const handleSearch = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     setSearchQuery('');
-    setIsSearching(true);
-    
-    // Simulate API call with timeout
-    setTimeout(() => {
-      setIsSearching(false);
-    }, 500);
   };
 
   const handleResultClick = (id: any) => {
