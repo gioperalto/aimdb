@@ -11,25 +11,29 @@ const Home = () => {
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
 
+  const search = (e: { preventDefault: () => void; }) => {
+    // Mock data - replace with actual API response
+    const mockResults = [
+      { id: 1, title: "The Matrix", year: 1999, rating: 8.7 },
+      { id: 2, title: "Inception", year: 2010, rating: 8.8 },
+      { id: 3, title: "Interstellar", year: 2014, rating: 8.6 },
+      { id: 4, title: "The Dark Knight", year: 2008, rating: 9.0 },
+      { id: 5, title: "Pulp Fiction", year: 1994, rating: 8.9 },
+    ].filter(item => 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
+    setSearchResults(mockResults);
+  };
+
   // Mock search function - would be replaced with actual API call
   const handleSearch = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
+    setSearchQuery('');
     setIsSearching(true);
     
     // Simulate API call with timeout
     setTimeout(() => {
-      // Mock data - replace with actual API response
-      const mockResults = [
-        { id: 1, title: "The Matrix", year: 1999, rating: 8.7 },
-        { id: 2, title: "Inception", year: 2010, rating: 8.8 },
-        { id: 3, title: "Interstellar", year: 2014, rating: 8.6 },
-        { id: 4, title: "The Dark Knight", year: 2008, rating: 9.0 },
-        { id: 5, title: "Pulp Fiction", year: 1994, rating: 8.9 },
-      ].filter(item => 
-        item.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      
-      // setSearchResults(mockResults);
       setIsSearching(false);
     }, 500);
   };
@@ -41,7 +45,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white flex flex-col items-center">
       <header className="w-full p-6 flex justify-center">
-        <h1 className="text-4xl font-bold text-blue-400">AIMDB</h1>
+        <h1 className="text-4xl font-bold "><span className="text-red-400">AI</span><span className="text-blue-400">MDB</span></h1>
       </header>
       
       <main className="w-full max-w-4xl px-4 flex-1 flex flex-col items-center">
@@ -51,7 +55,12 @@ const Home = () => {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={
+                  (e) => {
+                    setSearchQuery(e.target.value);
+                    search(e);
+                  }
+                }
                 placeholder="Search for movies, TV shows, actors..."
                 className="w-full px-6 py-4 rounded-full bg-gray-800 border-2 border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
               />
@@ -73,7 +82,7 @@ const Home = () => {
           </div>
         )}
         
-        {!isSearching && searchResults.length > 0 && (
+        {!isSearching && !searchQuery && searchResults.length > 0 && (
           <div className="w-full">
             <h2 className="text-2xl mb-4 font-semibold">Search Results</h2>
             <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg">
@@ -99,9 +108,9 @@ const Home = () => {
           </div>
         )}
         
-        {!isSearching && searchQuery && searchResults.length === 0 && (
+        {!isSearching && searchQuery && (
           <div className="text-center p-8">
-            <p className="text-xl text-gray-400">No results found for "{searchQuery}"</p>
+            <p className="text-xl text-gray-400">{searchResults.length} results found for "{searchQuery}"</p>
           </div>
         )}
       </main>
@@ -129,7 +138,7 @@ const DetailPage = () => {
         description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam eget felis eget nunc lobortis mattis aliquam faucibus. Pellentesque id nibh tortor id aliquet lectus proin nibh nisl."
       };
       
-      // setItem(mockData);
+      setItem(mockData);
       setLoading(false);
     }, 800);
   }, [id]);
