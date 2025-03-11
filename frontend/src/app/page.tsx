@@ -1,16 +1,18 @@
+"use client";
+
 // App.js - Main application component
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 
 // Home Page Component with Search Functionality
-const HomePage = () => {
+const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState<{ id: number; title: string; year: number; rating: number }[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
 
   // Mock search function - would be replaced with actual API call
-  const handleSearch = (e) => {
+  const handleSearch = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     setIsSearching(true);
     
@@ -27,12 +29,12 @@ const HomePage = () => {
         item.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
       
-      setSearchResults(mockResults);
+      // setSearchResults(mockResults);
       setIsSearching(false);
     }, 500);
   };
 
-  const handleResultClick = (id) => {
+  const handleResultClick = (id: any) => {
     navigate(`/details/${id}`);
   };
 
@@ -112,22 +114,22 @@ const DetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [item, setItem] = useState(null);
+  const [item, setItem] = useState<{ id: number; title: string; year: number; rating: number; director: string; description: string } | null>(null);
 
   React.useEffect(() => {
     // Mock API call to fetch details
     setTimeout(() => {
       // Sample data - would be replaced with actual API response
       const mockData = {
-        id: parseInt(id),
-        title: ["The Matrix", "Inception", "Interstellar", "The Dark Knight", "Pulp Fiction"][parseInt(id) - 1],
-        year: [1999, 2010, 2014, 2008, 1994][parseInt(id) - 1],
-        rating: [8.7, 8.8, 8.6, 9.0, 8.9][parseInt(id) - 1],
-        director: ["Wachowski Sisters", "Christopher Nolan", "Christopher Nolan", "Christopher Nolan", "Quentin Tarantino"][parseInt(id) - 1],
+        id: parseInt(id || '0'),
+        title: ["The Matrix", "Inception", "Interstellar", "The Dark Knight", "Pulp Fiction"][parseInt(id || '0') - 1],
+        year: [1999, 2010, 2014, 2008, 1994][parseInt(id || '0') - 1],
+        rating: [8.7, 8.8, 8.6, 9.0, 8.9][parseInt(id || '0') - 1],
+        director: ["Wachowski Sisters", "Christopher Nolan", "Christopher Nolan", "Christopher Nolan", "Quentin Tarantino"][parseInt(id || '0') - 1],
         description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam eget felis eget nunc lobortis mattis aliquam faucibus. Pellentesque id nibh tortor id aliquet lectus proin nibh nisl."
       };
       
-      setItem(mockData);
+      // setItem(mockData);
       setLoading(false);
     }, 800);
   }, [id]);
@@ -251,7 +253,7 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<Home />} />
         <Route path="/details/:id" element={<DetailPage />} />
       </Routes>
     </Router>
