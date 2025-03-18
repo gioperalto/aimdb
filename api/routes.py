@@ -1,5 +1,25 @@
-# Routes
-@app.route('/')
+# routes.py
+from flask import Blueprint, jsonify, request
+from pymongo import MongoClient
+import os
+from bson import ObjectId
+
+# Get MongoDB Atlas connection string from environment variable
+MONGO_URI = os.getenv("MONGO_URI")
+
+# Connect to MongoDB Atlas
+try:
+    client = MongoClient(MONGO_URI)
+    db = client.sample_mflix  # Database name
+    movies_collection = db.movies  # Collection name
+    print("Connected to MongoDB Atlas")
+except Exception as e:
+    print(f"Error connecting to MongoDB Atlas: {e}")
+
+route_bp = Blueprint('routes', __name__)
+
+# Home
+@route_bp.route('/')
 def home():
     return jsonify({
         "message": "Welcome to the AIMDB API",
@@ -15,7 +35,7 @@ def home():
     })
 
 # Get all movies (with pagination)
-@app.route('/api/movies')
+@route_bp.route('/api/movies')
 def get_movies():
     page = int(request.args.get('page', 1))
     per_page = int(request.args.get('per_page', 10))
@@ -38,7 +58,7 @@ def get_movies():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 # Get a specific movie by ID
-@app.route('/api/movies/<id>')
+@route_bp.route('/api/movies/<id>')
 def get_movie(id):
     try:
         movie = movies_collection.find_one({"_id": ObjectId(id)})
@@ -49,8 +69,25 @@ def get_movie(id):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+# Movie count by title
+@route_bp.route('/api/movies/count')
+def count_movies():
+    query = request.args.get('title', '')
+    if not query:
+        return jsonify({"status": "error", "message": "Search query is required"}), 400
+    
+    try:
+        # Case-insensitive search using regex
+        movies = list(movies_collection.find({"title": {"$regex": query, "$options": "i"}}))
+        return jsonify({
+            "status": "success",
+            "count": len(movies)
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 # Search movies by title
-@app.route('/api/movies/search')
+@route_bp.route('/api/movies/search')
 def search_movies():
     query = request.args.get('title', '')
     if not query:
@@ -68,7 +105,7 @@ def search_movies():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 # Get movies by genre
-@app.route('/api/movies/genre/<genre>')
+@route_bp.route('/api/movies/genre/<genre>')
 def get_movies_by_genre(genre):
     try:
         movies = list(movies_collection.find({"genres": genre}))
@@ -82,7 +119,7 @@ def get_movies_by_genre(genre):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 # Add a new movie
-@app.route('/api/movies', methods=['POST'])
+@route_bp.route('/api/movies', methods=['POST'])
 def add_movie():
     movie_data = request.json
     
@@ -104,7 +141,7 @@ def add_movie():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 # Update a movie
-@app.route('/api/movies/<id>', methods=['PUT'])
+@route_bp.route('/api/movies/<id>', methods=['PUT'])
 def update_movie(id):
     movie_data = request.json
     
@@ -130,7 +167,7 @@ def update_movie(id):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 # Delete a movie
-@app.route('/api/movies/<id>', methods=['DELETE'])
+@route_bp.route('/api/movies/<id>', methods=['DELETE'])
 def delete_movie(id):
     try:
         result = movies_collection.delete_one({"_id": ObjectId(id)})
@@ -144,3 +181,16 @@ def delete_movie(id):
         })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+# Helper function to convert ObjectId to string for JSON serialization
+def parse_json(data):
+    if isinstance(data, list):
+        return [parse_json(item) for item in data]
+    elif isinstance(data, dict):
+        for key, value in list(data.items()):
+            if isinstance(value, ObjectId):
+                data[key] = str(value)
+            elif isinstance(value, (dict, list)):
+                data[key] = parse_json(value)
+        return data
+    return data
