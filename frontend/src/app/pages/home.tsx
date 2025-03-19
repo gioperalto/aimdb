@@ -1,39 +1,73 @@
 
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 // Home Page Component with Search Functionality
 const HomePage = () => {
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<{ id: number; title: string; year: number; rating: number }[]>([]);
+    const [searchCount, setSearchCount] = useState(0);
+    const [searchResults, setSearchResults] = useState<{ _id: number; title: string; year: number; rating: number }[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const API_BASE_URL = 'http://localhost:5000/api';
   
-    const search = (e: { preventDefault: () => void; }) => {
+    const search = async (e: { preventDefault: () => void; }) => {
       setIsSearching(true);
       
-      // Simulate API call with timeout
-      setTimeout(() => {
-        // Mock data - replace with actual API response
-        const mockResults = [
-          { id: 1, title: "The Matrix", year: 1999, rating: 8.7 },
-          { id: 2, title: "Inception", year: 2010, rating: 8.8 },
-          { id: 3, title: "Interstellar", year: 2014, rating: 8.6 },
-          { id: 4, title: "The Dark Knight", year: 2008, rating: 9.0 },
-          { id: 5, title: "Pulp Fiction", year: 1994, rating: 8.9 },
-        ].filter(item => 
-          item.title.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+      try {
+        const response = await axios.get(`${API_BASE_URL}/movies/count`, {
+          params: { title: searchQuery }
+        });
         
-        setSearchResults(mockResults);
+        if (response.data.status === 'success') {
+          setSearchCount(response.data.count);
+        } else {
+          setError('Failed to fetch movie count');
+        }
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          setError(err.message || 'An error occurred while fetching movie count');
+        } else {
+          setError('An unknown error occurred');
+        }
+      } finally {
         setIsSearching(false);
-      }, 500);
+      }
     };
   
     // Mock search function - would be replaced with actual API call
-    const handleSearch = (e: { preventDefault: () => void; }) => {
+    const handleSearch = async (e: { preventDefault: () => void; }) => {
       e.preventDefault();
+
+      setIsSearching(true);
+      console.log(searchQuery);
+      
+      // Simulate API call with timeout
+      // setTimeout(async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/movies/search`, {
+          params: { title: searchQuery }
+        });
+        
+        if (response.data.status === 'success') {
+          setSearchResults(response.data.movies);
+        } else {
+          setError('Failed to fetch movies');
+        }
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          setError(err.message || 'An error occurred while fetching movies');
+        } else {
+          setError('An unknown error occurred');
+        }
+      } finally {
+        setIsSearching(false);
+      }
+
       setSearchQuery('');
+      // }, 800);
     };
   
     const handleResultClick = (id: any) => {
@@ -64,7 +98,7 @@ const HomePage = () => {
                 />
                 <button 
                   type="submit"
-                  className="absolute right-2 top-2 bg-blue-500 p-2 rounded-full hover:bg-blue-400 transition-colors"
+                  className="absolute right-2 top-2 bg-blue-500 p-2 rounded-full hover:bg-blue-400 transition-colors cursor-pointer"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -86,8 +120,8 @@ const HomePage = () => {
               <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg">
                 {searchResults.map((result) => (
                   <div 
-                    key={result.id}
-                    onClick={() => handleResultClick(result.id)}
+                    key={result._id}
+                    onClick={() => handleResultClick(result._id)}
                     className="p-4 border-b border-gray-700 hover:bg-gray-700 transition-colors cursor-pointer flex justify-between items-center"
                   >
                     <div>
@@ -106,9 +140,9 @@ const HomePage = () => {
             </div>
           )}
           
-          {!isSearching && searchQuery && (
+          {!isSearching && searchQuery && searchQuery.length >= 3 && (
             <div className="text-center p-8">
-              <p className="text-xl text-gray-400">{searchResults.length} results found for "{searchQuery}"</p>
+              <p className="text-xl text-gray-400">{searchCount} results found for "{searchQuery}"</p>
             </div>
           )}
         </main>
