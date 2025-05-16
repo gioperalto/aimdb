@@ -12,11 +12,32 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     FLASK_APP=app.py \
     FLASK_ENV=production
 
-# Install system dependencies
+# Install system dependencies (curl and wget for Google Cloud SDK installation)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
+    gcc curl wget \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Google Cloud SDK installation
+RUN mkdir -p /usr/local/gcloud && \
+curl -sS -o /tmp/google-cloud-sdk.tar.gz https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz && \
+tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz && \
+/usr/local/gcloud/google-cloud-sdk/install.sh --quiet
+
+# Add gcloud to the PATH (optional, but recommended)
+ENV PATH=/usr/local/gcloud/google-cloud-sdk/bin:${PATH}
+
+#  Set env variable for Google Cloud credentials
+ENV GOOGLE_APPLICATION_CREDENTIALS=/opt/service_account.json
+
+ENV DD_API_KEY="YOUR_DATADOG_API_KEY"
+ENV DD_SITE="datadoghq.com"
+ENV DD_SERVICE="aimdb-api"
+ENV DD_ENV="development"
+ENV DD_VERSION="1.0.0"
+ENV DD_LLMOBS_ENABLED=1
+ENV DD_LLMOBS_AGENTLESS_ENABLED=1
+ENV DD_LLMOBS_ML_APP="aimdb-api"
 
 # Copy requirements file first for better caching
 COPY requirements.txt .
@@ -31,4 +52,4 @@ COPY . .
 EXPOSE 5000
 
 # Command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+CMD ["ddtrace-run", "gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
