@@ -1,3 +1,4 @@
+"use client";
 
 import React, { useState } from 'react';
 import axios from 'axios';
@@ -37,7 +38,6 @@ const HomePage = () => {
       }
     };
   
-    // Mock search function - would be replaced with actual API call
     const handleSearch = async (e: { preventDefault: () => void; }) => {
       e.preventDefault();
 

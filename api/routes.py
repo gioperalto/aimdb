@@ -1,8 +1,12 @@
 # routes.py
+from __future__ import annotations
 from flask import Blueprint, jsonify, request
+from google.cloud import aiplatform
+from vertexai.language_models import TextEmbeddingInput, TextEmbeddingModel
 from pymongo import MongoClient
 import os
 from bson import ObjectId
+from ddtrace.llmobs import LLMObs
 
 # Get MongoDB Atlas connection string from environment variable
 MONGO_URI = os.getenv("MONGO_URI")
@@ -11,7 +15,8 @@ MONGO_URI = os.getenv("MONGO_URI")
 try:
     client = MongoClient(MONGO_URI)
     db = client.sample_mflix  # Database name
-    movies_collection = db.movies  # Collection name
+    movies_collection = db.movies  # Movies collection
+    embedded_movies_collection = db.embedded_movies_v2  # Embedded movies collection (using Gemini text-embedding-005)
     print("Connected to MongoDB Atlas")
 except Exception as e:
     print(f"Error connecting to MongoDB Atlas: {e}")
@@ -118,6 +123,42 @@ def get_movies_by_genre(genre):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+# Get similar movies to a specific movie via vector search
+@route_bp.route('/api/movies/similar', methods=['POST'])
+def get_similar_movies():
+    if request.method == 'POST':
+        data = request.get_json()
+
+        try:
+            # Assuming you have a vector search implementation
+            # This is a placeholder for the actual vector search logic
+            qv, *_ = embed_text(data['plot'])
+            similar_movies = vector_search(qv, data['plot'])
+            return jsonify({
+                "status": "success",
+                "similar_movies": parse_json(similar_movies)
+            })
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 500
+
+# Get similar movies to a specific movie via vector search with exact match
+@route_bp.route('/api/movies/exact', methods=['POST'])
+def get_exact_movies():
+    if request.method == 'POST':
+        data = request.get_json()
+
+        try:
+            # Assuming you have a vector search implementation
+            # This is a placeholder for the actual vector search logic
+            qv, *_ = embed_text(data['plot'])
+            similar_movies = vector_search_exact(qv, data['plot'])
+            return jsonify({
+                "status": "success",
+                "similar_movies": parse_json(similar_movies)
+            })
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 500
+
 # Add a new movie
 @route_bp.route('/api/movies', methods=['POST'])
 def add_movie():
@@ -194,3 +235,88 @@ def parse_json(data):
                 data[key] = parse_json(value)
         return data
     return data
+
+# Function to embed text using Google Vertex AI
+def embed_text(txt) -> list[list[float]]:
+    """Embeds texts with a pre-trained, foundational model.
+
+    Returns:
+        A list of lists containing the embedding vectors for each input text
+    """
+    with LLMObs.workflow(name="embed_text") as span:
+        # A list of texts to be embedded.
+        texts = [txt]
+        # The dimensionality of the output embeddings.
+        dimensionality = 768
+        # The task type for embedding. Check the available tasks in the model's documentation.
+        task = "RETRIEVAL_DOCUMENT"
+
+        model = TextEmbeddingModel.from_pretrained("text-embedding-005")
+        inputs = [TextEmbeddingInput(text, task) for text in texts]
+        kwargs = dict(output_dimensionality=dimensionality) if dimensionality else {}
+        embeddings = model.get_embeddings(inputs, **kwargs)
+        values = [embedding.values for embedding in embeddings]
+
+        LLMObs.annotate(
+            input_data=txt,
+            output_data=values[0],
+            metadata={"embed_text": f"embedded {txt} using text-embedding-005"},
+            tags={"env": "dev"},
+        )
+
+        return values
+
+def vector_search(qv, plot_txt):
+    # define pipeline
+    pipeline = [
+        {
+            '$vectorSearch': {
+                'exact': False,
+                'filter': { "plot": { "$ne": plot_txt } },
+                'index': 'vector_index_2', 
+                'path': 'plot_embedding', 
+                'queryVector': qv,
+                'numCandidates': 150, # only used if exact=False
+                'limit': 10
+            }
+        }, {
+            '$project': {
+                'plot_embedding': 0, 
+                'score': {
+                    '$meta': 'vectorSearchScore'
+                }
+            }
+        }
+    ]
+
+    # run pipeline
+    results = embedded_movies_collection.aggregate(pipeline)
+
+    return list(results)
+
+def vector_search_exact(qv, plot_txt):
+    # define pipeline
+    pipeline = [
+        {
+            '$vectorSearch': {
+                'exact': True,
+                'filter': { "plot": { "$ne": plot_txt } },
+                'index': 'vector_index_2', 
+                'path': 'plot_embedding', 
+                'queryVector': qv,
+                'limit': 10
+            }
+        }, {
+            '$project': {
+                'plot_embedding': 0, 
+                'score': {
+                    '$meta': 'vectorSearchScore'
+                }
+            }
+        }
+    ]
+
+    # run pipeline
+    results = embedded_movies_collection.aggregate(pipeline)
+
+    return list(results)
