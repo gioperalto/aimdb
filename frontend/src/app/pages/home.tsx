@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,31 +11,35 @@ const HomePage = () => {
     const [searchResults, setSearchResults] = useState<{ _id: number; title: string; year: number; rating: number }[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const timerId = useRef<NodeJS.Timeout | null>(null);
     const navigate = useNavigate();
     const API_BASE_URL = 'http://localhost:5000/api';
   
     const search = async (e: { preventDefault: () => void; }) => {
       setIsSearching(true);
-      
-      try {
-        const response = await axios.get(`${API_BASE_URL}/movies/count`, {
-          params: { title: searchQuery }
-        });
-        
-        if (response.data.status === 'success') {
-          setSearchCount(response.data.count);
-        } else {
-          setError('Failed to fetch movie count');
+      clearTimeout(timerId.current as ReturnType<typeof setTimeout>);
+
+      timerId.current = setTimeout(async () => {
+        try {
+          const response = await axios.get(`${API_BASE_URL}/movies/count`, {
+            params: { title: searchQuery }
+          });
+          
+          if (response.data.status === 'success') {
+            setSearchCount(response.data.count);
+          } else {
+            setError('Failed to fetch movie count');
+          }
+        } catch (err) {
+          if (axios.isAxiosError(err)) {
+            setError(err.message || 'An error occurred while fetching movie count');
+          } else {
+            setError('An unknown error occurred');
+          }
+        } finally {
+          setIsSearching(false);
         }
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-          setError(err.message || 'An error occurred while fetching movie count');
-        } else {
-          setError('An unknown error occurred');
-        }
-      } finally {
-        setIsSearching(false);
-      }
+      }, 300); // Adjust the delay as needed (e.g., 300ms)
     };
   
     const handleSearch = async (e: { preventDefault: () => void; }) => {
@@ -140,7 +144,7 @@ const HomePage = () => {
             </div>
           )}
           
-          {!isSearching && searchQuery && searchQuery.length >= 3 && (
+          {!isSearching && searchQuery && searchQuery.length >= 2 && (
             <div className="text-center p-8">
               <p className="text-xl text-gray-400">{searchCount} results found for "{searchQuery}"</p>
             </div>

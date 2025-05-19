@@ -99,6 +99,7 @@ const SimilarMovies: React.FC<SimilarMoviesProps> = ({ movieId, moviePlot }) => 
                   className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border border-slate-300 checked:border-blue-400 transition-all"
                   id="blue-600"
                   checked={!exactMatch}
+                  readOnly
                 />
                 <span className="absolute bg-blue-600 w-3 h-3 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity duration-200 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></span>
               </label>
@@ -114,6 +115,7 @@ const SimilarMovies: React.FC<SimilarMoviesProps> = ({ movieId, moviePlot }) => 
                   className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border border-slate-300 checked:border-red-400 transition-all"
                   id="red-600"
                   checked={exactMatch}
+                  readOnly
                 />
                 <span className="absolute bg-red-600 w-3 h-3 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity duration-200 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></span>
               </label>
