@@ -303,7 +303,7 @@ def vector_search(qv, plot_txt):
         LLMObs.annotate(
             input_data=qv,
             output_data=[
-                { "id": doc['_id'], "score": doc['score'], "text": doc['plot'], "name": doc['title'] } for doc in results
+                { "id": str(doc['_id']), "score": doc['score'], "text": doc['plot'], "name": doc['title'] } for doc in results
             ],
             metadata={"vector_search": f"vector search on \"{plot_txt}\""},
             tags={"env": DD_ENV},
@@ -342,7 +342,7 @@ def vector_search_exact(qv, plot_txt):
         LLMObs.annotate(
             input_data=qv,
             output_data=[
-                { "id": doc['_id'], "score": doc['score'], "text": doc['plot'], "name": doc['title'] } for doc in results
+                { "id": str(doc['_id']), "score": doc['score'], "text": doc['plot'], "name": doc['title'] } for doc in results
             ],
             metadata={"exact_vector_search": f"exact vector search on \"{plot_txt}\""},
             tags={"env": DD_ENV},
