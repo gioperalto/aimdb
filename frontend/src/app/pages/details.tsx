@@ -1,13 +1,15 @@
 "use client";
 
-// App.js - Main application component
+// Details.tsx - Movie details page component
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import SimilarMovies from './similar';
+import dynamic from 'next/dynamic';
+
+const SimilarMovies = dynamic(() => import('./similar'), { ssr: false });
 
 // Detail Page Component
-const DetailPage = () => {
+const DetailsPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
@@ -194,4 +196,4 @@ const DetailPage = () => {
     );
   };
 
-  export default DetailPage;
+  export default DetailsPage;

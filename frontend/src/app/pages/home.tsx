@@ -1,10 +1,11 @@
 "use client";
 
+// Home.tsx - Home page component with search functionality
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-// Home Page Component with Search Functionality
+// Home Page Component
 const HomePage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchCount, setSearchCount] = useState(0);

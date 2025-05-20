@@ -243,7 +243,7 @@ def embed_text(txt) -> list[list[float]]:
     Returns:
         A list of lists containing the embedding vectors for each input text
     """
-    with LLMObs.workflow(name="embed_text") as span:
+    with LLMObs.embedding(name="embed_text", model_provider="google", model_name="text-embedding-005") as span:
         # A list of texts to be embedded.
         texts = [txt]
         # The dimensionality of the output embeddings.
@@ -256,67 +256,93 @@ def embed_text(txt) -> list[list[float]]:
         kwargs = dict(output_dimensionality=dimensionality) if dimensionality else {}
         embeddings = model.get_embeddings(inputs, **kwargs)
         values = [embedding.values for embedding in embeddings]
+        statistics = [embedding.statistics for embedding in embeddings]
 
         LLMObs.annotate(
             input_data=txt,
             output_data=values[0],
             metadata={"embed_text": f"embedded {txt} using text-embedding-005"},
-            tags={"env": "dev"},
+            metrics={"total_tokens": statistics[0].token_count},
+            tags={"env": "development"},
         )
 
         return values
 
 def vector_search(qv, plot_txt):
-    # define pipeline
-    pipeline = [
-        {
-            '$vectorSearch': {
-                'exact': False,
-                'filter': { "plot": { "$ne": plot_txt } },
-                'index': 'vector_index_2', 
-                'path': 'plot_embedding', 
-                'queryVector': qv,
-                'numCandidates': 150, # only used if exact=False
-                'limit': 10
-            }
-        }, {
-            '$project': {
-                'plot_embedding': 0, 
-                'score': {
-                    '$meta': 'vectorSearchScore'
+    with LLMObs.retrieval(name="vector_search") as span:
+        # define pipeline
+        pipeline = [
+            {
+                '$vectorSearch': {
+                    'exact': False,
+                    'filter': { "plot": { "$ne": plot_txt } },
+                    'index': 'vector_index_2', 
+                    'path': 'plot_embedding', 
+                    'queryVector': qv,
+                    'numCandidates': 150, # only used if exact=False
+                    'limit': 10
+                }
+            }, {
+                '$project': {
+                    'plot_embedding': 0, 
+                    '_id': 1,
+                    'score': {
+                        '$meta': 'vectorSearchScore'
+                    }
                 }
             }
-        }
-    ]
+        ]
 
-    # run pipeline
-    results = embedded_movies_collection.aggregate(pipeline)
+        # run pipeline
+        results = list(embedded_movies_collection.aggregate(pipeline))
 
-    return list(results)
+        # Annotate the LLM call with input and output data
+        LLMObs.annotate(
+            input_data=qv,
+            output_data=[
+                { "id": doc['_id'], "score": doc['score'], "text": doc['plot'], "name": doc['title'] } for doc in results
+            ],
+            metadata={"vector_search": f"vector search on \"{plot_txt}\""},
+            tags={"env": "development"},
+        )
+
+        return results
 
 def vector_search_exact(qv, plot_txt):
-    # define pipeline
-    pipeline = [
-        {
-            '$vectorSearch': {
-                'exact': True,
-                'filter': { "plot": { "$ne": plot_txt } },
-                'index': 'vector_index_2', 
-                'path': 'plot_embedding', 
-                'queryVector': qv,
-                'limit': 10
-            }
-        }, {
-            '$project': {
-                'plot_embedding': 0, 
-                'score': {
-                    '$meta': 'vectorSearchScore'
+    with LLMObs.retrieval(name="exact_vector_search") as span:
+        # define pipeline
+        pipeline = [
+            {
+                '$vectorSearch': {
+                    'exact': True,
+                    'filter': { "plot": { "$ne": plot_txt } },
+                    'index': 'vector_index_2', 
+                    'path': 'plot_embedding', 
+                    'queryVector': qv,
+                    'limit': 10
+                }
+            }, {
+                '$project': {
+                    'plot_embedding': 0,
+                    '_id': 1,
+                    'score': {
+                        '$meta': 'vectorSearchScore'
+                    }
                 }
             }
-        }
-    ]
+        ]
 
-    # run pipeline
-    results = embedded_movies_collection.aggregate(pipeline)
+        # run pipeline
+        results = list(embedded_movies_collection.aggregate(pipeline))
 
-    return list(results)
+        # Annotate the LLM call with input and output data
+        LLMObs.annotate(
+            input_data=qv,
+            output_data=[
+                { "id": doc['_id'], "score": doc['score'], "text": doc['plot'], "name": doc['title'] } for doc in results
+            ],
+            metadata={"exact_vector_search": f"exact vector search on \"{plot_txt}\""},
+            tags={"env": "development"},
+        )
+
+        return results

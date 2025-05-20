@@ -1,5 +1,6 @@
 "use client";
 
+// SimilarMovies.tsx - Component to fetch and display similar movies
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +10,7 @@ interface SimilarMoviesProps {
   moviePlot: string;
 }
 
+// SimilarMovies Component
 const SimilarMovies: React.FC<SimilarMoviesProps> = ({ movieId, moviePlot }) => {
   interface Movie {
     _id: string;

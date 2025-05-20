@@ -28,7 +28,7 @@ tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz && \
 ENV PATH=/usr/local/gcloud/google-cloud-sdk/bin:${PATH}
 
 #  Set env variable for Google Cloud credentials
-ENV GOOGLE_APPLICATION_CREDENTIALS=/opt/service_account.json
+ENV GOOGLE_APPLICATION_CREDENTIALS=/opt/service-account.json
 
 ENV DD_API_KEY="YOUR_DATADOG_API_KEY"
 ENV DD_SITE="datadoghq.com"
@@ -39,17 +39,19 @@ ENV DD_LLMOBS_ENABLED=1
 ENV DD_LLMOBS_AGENTLESS_ENABLED=1
 ENV DD_LLMOBS_ML_APP="aimdb-api"
 
+ENV MONGO_URI="YOUR_MONGODB_URI"
+
 # Copy requirements file first for better caching
-COPY requirements.txt .
+COPY api/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
-COPY . .
+COPY api .
 
 # Expose port that Flask will run on
 EXPOSE 5000
 
 # Command to run the application
-CMD ["ddtrace-run", "gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+CMD ["ddtrace-run", "gunicorn", "--bind", "0.0.0.0:5000", "app:app", "--log-file", "-", "--access-logfile", "-"]

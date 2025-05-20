@@ -1,0 +1,66 @@
+services:
+  dd-agent: # Datadog agent sidecar
+    container_name: dd-agent
+    build:
+      context: ./
+      dockerfile: ./dd-agent/Dockerfile
+    pid: "host"
+    ports:
+      - "8125:8125/udp" # APM
+      - "8126:8126/tcp" # DOGSTATSD
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "/proc/:/host/proc/:ro"
+      - "/sys/fs/cgroup/:/host/sys/fs/cgroup:ro"
+      - "/etc/passwd:/etc/passwd:ro" # LIVE PROCESSES
+      - "/sys/kernel/debug:/sys/kernel/debug"
+      - "/lib/modules:/lib/modules"
+      - "/usr/src:/usr/src"
+      - "/var/tmp/datadog-agent/system-probe/build:/var/tmp/datadog-agent/system-probe/build"
+      - "/var/tmp/datadog-agent/system-probe/kernel-headers:/var/tmp/datadog-agent/system-probe/kernel-headers"
+    environment:
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_ENV=${DD_ENV}
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      - DD_PROCESS_AGENT_ENABLED=true
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+      - DD_SYSTEM_PROBE_NETWORK_ENABLED=true
+      - DD_SYSTEM_PROBE_SERVICE_MONITORING_ENABLED=true
+      - DD_RUNTIME_SECURITY_CONFIG_ENABLED=true
+      - DD_RUNTIME_SECURITY_CONFIG_NETWORK_ENABLED=true
+      - HOST_ROOT='/host/root'
+    cap_add:
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - SYS_PTRACE
+      - NET_ADMIN
+      - NET_BROADCAST
+      - NET_RAW
+      - IPC_LOCK
+      - CHOWN
+    security_opt:
+      - apparmor:unconfined
+
+  aimdb-api:
+    container_name: aimdb-api
+    build:
+      context: ./
+      dockerfile: ./api/Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ~/.config/gcloud:/opt
+    environment:
+      - DD_AGENT_HOST=dd-agent
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_ENV=${DD_ENV}
+      - DD_SITE=datadoghq.com
+      - DD_SERVICE=aimdb-api
+      - DD_RUNTIME_METRICS_ENABLED=true
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_INJECTION=true
+      - DD_PROFILING_ENABLED=true
+      - MONGO_URI=${MONGO_URI}
+    depends_on:
+      - dd-agent
