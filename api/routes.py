@@ -11,6 +11,9 @@ from ddtrace.llmobs import LLMObs
 # Get MongoDB Atlas connection string from environment variable
 MONGO_URI = os.getenv("MONGO_URI")
 
+# Datadog environment variable
+DD_ENV = os.getenv("DD_ENV")
+
 # Connect to MongoDB Atlas
 try:
     client = MongoClient(MONGO_URI)
@@ -263,7 +266,7 @@ def embed_text(txt) -> list[list[float]]:
             output_data=values[0],
             metadata={"embed_text": f"embedded {txt} using text-embedding-005"},
             metrics={"total_tokens": statistics[0].token_count},
-            tags={"env": "development"},
+            tags={"env": DD_ENV},
         )
 
         return values
@@ -303,7 +306,7 @@ def vector_search(qv, plot_txt):
                 { "id": doc['_id'], "score": doc['score'], "text": doc['plot'], "name": doc['title'] } for doc in results
             ],
             metadata={"vector_search": f"vector search on \"{plot_txt}\""},
-            tags={"env": "development"},
+            tags={"env": DD_ENV},
         )
 
         return results
@@ -342,7 +345,7 @@ def vector_search_exact(qv, plot_txt):
                 { "id": doc['_id'], "score": doc['score'], "text": doc['plot'], "name": doc['title'] } for doc in results
             ],
             metadata={"exact_vector_search": f"exact vector search on \"{plot_txt}\""},
-            tags={"env": "development"},
+            tags={"env": DD_ENV},
         )
 
         return results
