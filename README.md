@@ -1,4 +1,5 @@
-# $${\color{red}AI}MDB$$
+=======
+# AIMDB
 
 AI Movie Database. A modern take on IMDB.
 
