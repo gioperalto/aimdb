@@ -1,10 +1,10 @@
-# $${\color{Red}AI}MDB$$
+# $${\color{red}AI}MDB$$
 
 AI Movie Database. A modern take on IMDB.
 
 ## Prereqs
 1. Docker (needed to run docker containers)
-2. NodeJS (NextJS frontend)
+2. NodeJS (Vite frontend)
 3. MongoDB Atlas (for connection string)
 
 ## Disclaimers
@@ -22,18 +22,11 @@ I was unable to attach the collection containing the `text-embedding-005` embedd
     - `DD_ENV` (`development|production`)
     - `MONGO_URI` (can be obtained from MongoDB Atlas)
     - `DD_API_KEY` (can be obtained from Datadog website)
-3. In the `~/.config/gcloud` directory, create a `service-account.json` file containing the gcloud creds for a service account with **Vertex AI User** permissions
+3. Populate an `.env` file in the `frontend-v2` project with:
+    - `VITE_API_BASE_URL` (URL to your API)
+4. In the `~/.config/gcloud` directory, create a `service-account.json` file containing the gcloud creds for a service account with **Vertex AI User** permissions
 
 ## Startup
 
-The (frontend) application will run on port `3000`. Your API will run on port `5000`:
-- `http://localhost:3000`
-- `http://localhost:5000`
-
-### Frontend
-
-1. `cd frontend`
-2. `npm run dev`
-
 ### API
-1. `docker compose up -d` (will spin up datadog agent sidecar + api server)
+1. `docker compose up -d` (will spin up the frontend, datadog agent sidecar, api server)
