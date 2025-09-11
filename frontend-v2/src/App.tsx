@@ -1,14 +1,15 @@
-"use client";
+import './App.css'
 
 // App.js - Main application component
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import dynamic from 'next/dynamic';
 
-const HomePage = dynamic(() => import('./pages/home'), { ssr: false });
-const DetailsPage = dynamic(() => import('./pages/details'), { ssr: false });
+import HomePage from './pages/HomePage';
+import DetailsPage from './pages/Detail';
 
 // Main App Component
 const App = () => {
+  // const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   return (
     <Router>
       <Routes>

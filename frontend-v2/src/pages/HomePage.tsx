@@ -1,7 +1,7 @@
 "use client";
 
 // Home.tsx - Home page component with search functionality
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,18 +11,18 @@ const HomePage = () => {
     const [searchCount, setSearchCount] = useState(0);
     const [searchResults, setSearchResults] = useState<{ _id: number; title: string; year: number; rating: number }[]>([]);
     const [isSearching, setIsSearching] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [, setError] = useState<string | null>(null);
     const timerId = useRef<NodeJS.Timeout | null>(null);
     const navigate = useNavigate();
-    const API_BASE_URL = 'http://localhost:5000/api';
-  
-    const search = async (e: { preventDefault: () => void; }) => {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    
+    const search = async () => {
       setIsSearching(true);
       clearTimeout(timerId.current as ReturnType<typeof setTimeout>);
 
       timerId.current = setTimeout(async () => {
         try {
-          const response = await axios.get(`${API_BASE_URL}/movies/count`, {
+          const response = await axios.get(`${API_BASE_URL}/api/movies/count`, {
             params: { title: searchQuery }
           });
           
@@ -47,12 +47,12 @@ const HomePage = () => {
       e.preventDefault();
 
       setIsSearching(true);
-      console.log(searchQuery);
+      console.log(`Search triggered for: ${searchQuery}`);
       
       // Simulate API call with timeout
       // setTimeout(async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/movies/search`, {
+        const response = await axios.get(`${API_BASE_URL}/api/movies/search`, {
           params: { title: searchQuery }
         });
         
@@ -95,7 +95,7 @@ const HomePage = () => {
                   onChange={
                     (e) => {
                       setSearchQuery(e.target.value);
-                      search(e);
+                      search();
                     }
                   }
                   placeholder="Search for movies, TV shows, actors..."

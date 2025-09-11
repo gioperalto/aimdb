@@ -24,10 +24,9 @@ const SimilarMovies: React.FC<SimilarMoviesProps> = ({ movieId, moviePlot }) => 
   
   const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
-  const [exactMatch, setExactMatch] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const API_BASE_URL = 'http://localhost:5000/api';
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     if (movieId) {
@@ -43,28 +42,7 @@ const SimilarMovies: React.FC<SimilarMoviesProps> = ({ movieId, moviePlot }) => 
     setLoading(true);
     try {
       // Replace with your actual API endpoint
-      const response = await axios.post(`${API_BASE_URL}/movies/similar`, {
-        plot: moviePlot,
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      setSimilarMovies(response.data.similar_movies);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'An error occurred while fetching similar movies'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchExactMovies = async () => {
-    setLoading(true);
-    try {
-      // Replace with your actual API endpoint
-      const response = await axios.post(`${API_BASE_URL}/movies/exact`, {
+      const response = await axios.post(`${API_BASE_URL}/api/movies/similar`, {
         plot: moviePlot,
       }, {
         headers: {
@@ -88,41 +66,12 @@ const SimilarMovies: React.FC<SimilarMoviesProps> = ({ movieId, moviePlot }) => 
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
           </svg>
-          Similar Movies
+          Similar Movies based on Overview
           <div className="flex">
             <div className="inline-flex items-center ml-4" onClick={() => {
-              setExactMatch(false);
               fetchSimilarMovies();
             }}>
-              <label className="relative flex items-center cursor-pointer">
-                <input
-                  name="color"
-                  type="radio"
-                  className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border border-slate-300 checked:border-blue-400 transition-all"
-                  id="blue-600"
-                  checked={!exactMatch}
-                  readOnly
-                />
-                <span className="absolute bg-blue-600 w-3 h-3 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity duration-200 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></span>
-              </label>
             </div>
-            <div className="inline-flex items-center ml-4" onClick={() => {
-              setExactMatch(true);
-              fetchExactMovies();
-            }}>
-              <label className="relative flex items-center cursor-pointer">
-                <input
-                  name="color"
-                  type="radio"
-                  className="peer h-5 w-5 cursor-pointer appearance-none rounded-full border border-slate-300 checked:border-red-400 transition-all"
-                  id="red-600"
-                  checked={exactMatch}
-                  readOnly
-                />
-                <span className="absolute bg-red-600 w-3 h-3 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity duration-200 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></span>
-              </label>
-            </div>
-            <span className="text-lg font-medium ml-4">{ exactMatch ? 'Exact Match' : 'Approximate Match' }</span>
           </div>
         </h2>
 
