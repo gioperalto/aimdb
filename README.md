@@ -15,6 +15,8 @@ By default, MongoDB's `sample_mflix` database has a `movie_embeddings` collectio
 
 I was unable to attach the collection containing the `text-embedding-005` embeddings I generated to this repository because the file size was too large for GitHub (200+ MB).
 
+**The code in `api/routes.py` works with an index called `vector_index_2`. If you want to use a different index you will need to change that code in line `285`**
+
 ## Setup
 
 1. When setting up your MongoDB Atlas cluster, check the box to include sample data (that will give you the `sample_mflix` database) 
