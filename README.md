@@ -1,4 +1,3 @@
-=======
 # AIMDB
 
 AI Movie Database. A modern take on IMDB.
