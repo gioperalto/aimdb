@@ -34,8 +34,11 @@ def home():
         "endpoints": {
             "GET /api/movies": "Get all movies",
             "GET /api/movies/<id>": "Get a specific movie by ID",
+            "GET /api/movies/count": "Count movies by title",
             "GET /api/movies/search": "Search movies by title",
             "GET /api/movies/genre/<genre>": "Get movies by genre",
+            "POST /api/movies/similar": "Get similar movies to a specific movie",
+            "POST /api/movies/exact": "Get similar movies to a specific movie via using exact match",
             "POST /api/movies": "Add a new movie",
             "PUT /api/movies/<id>": "Update a movie",
             "DELETE /api/movies/<id>": "Delete a movie"
@@ -317,11 +320,12 @@ def vector_search_exact(qv, plot_txt):
         pipeline = [
             {
                 '$vectorSearch': {
-                    'exact': True,
+                    'exact': False,
                     'filter': { "plot": { "$ne": plot_txt } },
-                    'index': 'vector_index_2', 
+                    'index': 'vector_index_pt', 
                     'path': 'plot_embedding', 
                     'queryVector': qv,
+                    'numCandidates': 150, # only used if exact=False
                     'limit': 10
                 }
             }, {

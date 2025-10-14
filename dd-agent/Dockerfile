@@ -1,1 +1,1 @@
-FROM gcr.io/datadoghq/agent:7.43.1
+FROM gcr.io/datadoghq/agent:7.71.1
